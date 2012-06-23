@@ -3,6 +3,7 @@
 import logging
 import bottle
 import wwn_factory
+import fqdn_validator
 
 @bottle.route('/')
 def slash() :
@@ -40,7 +41,7 @@ def json_FQDN(FQDN) :
 
 @bottle.get('/create/:FQDN')
 def create_FQDN(FQDN) :
-    if wwn_factory.validate_FQDN(FQDN) :
+    if fqdn_validator.validate_FQDN(FQDN) :
         success, host = wwn_factory.create(FQDN)
         if success :
             return bottle.template('make_table', rows=[host])

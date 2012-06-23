@@ -48,13 +48,94 @@ class SanData(object) :
         except sqlite3.Error, e:
             if e.args[0].startswith("no such table: ") :
                 # proxy test for an empty DB
-                self.cursor.execute("CREATE TABLE DbVersion(Version CHAR(20)")
-                self.cursor.execute("INSERT INTO DbVersion(Version) 
-                                        VALUES ('1');")
                 self.make_tables()
 
     def make_tables(self) :
         """makes blank tables"""
+        self.cursor.execute("CREATE TABLE DbVersion(Version INT)")
+        self.cursor.execute("INSERT INTO DbVersion(Version) VALUES (1);")
+        self.cursor.execute("CREATE TABLE Fabrics(SwitchWWN CHAR(23), Description CHAR(25), Fabric CHAR(1))")
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:04:46:c5", "verizon-fabric-a", 'a') )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:04:4f:28", "verizon-fabric-a", 'a') )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:04:46:c5", "verizon-fabric-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:04:4f:28", "verizon-fabric-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:73:0f:c9", "earthstation-fab-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:72:f6:1a", "earthstation-fab-b", "b") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:dd:3b:e1", "tc3-fabric-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:73:64:d1", "tc3-fabric-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:ca:6b:0f", "tc3-fabric-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:73:68:15", "tc3-fabric-b", "b") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:1e:dd:2f:5d", "tc3-fabric-b", "b") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:cf:99:6b", "tc3-fabric-b", "b") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:c8:54:29", "tc3-broadcast-a", "a") )
+        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
+                      ("10:00:00:05:33:ca:6a:0b", "tc3-broadcast-a", "a") )
+        #####
+        self.cursor.execute("CREATE TABLE HostInfo(FQDN CHAR(100), WWNN CHAR(23), WWPNA CHAR(23), WWPNB CHAR(23))")
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("prtsys01.atl.weather.com", 
+                               "5f:0a:22:50:0f:21:db:b4",
+                               "5f:0a:22:50:0a:21:db:b4",
+                               "5f:0a:22:50:0b:21:db:b4") )
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("jtest.atl.weather.com",
+                               "5f:0a:22:50:0f:33:22:11",
+                               "5f:0a:22:50:0a:33:22:11",
+                               "5f:0a:22:50:0b:33:22:11"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("nas0b00.be.weather.com",
+                               "5f:0a:22:50:0f:dd:d3:81",
+                               "5f:0a:22:50:0a:dd:d3:81",
+                               "5f:0a:22:50:0b:dd:d3:81"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("repdb3b00.be.weather.com",
+                               "5f:0a:22:50:3f:f4:33:ab",
+                               "5f:0a:22:50:3a:f4:33:ab",
+                               "5f:0a:22:50:3b:f4:33:ab"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("zabbixdb3b00.be.weather.com",
+                               "5f:0a:22:50:3f:f0:8d:3f",
+                               "5f:0a:22:50:3a:f0:8d:3f",
+                               "5f:0a:22:50:3b:f0:8d:3f"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("prtsys02.atl.weather.com",
+                               "5f:0a:22:50:0f:dd:92:d8",
+                               "5f:0a:22:50:0a:dd:92:d8",
+                               "5f:0a:22:50:0b:dd:92:d8"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("zabbixdb3b01.be.weather.com",
+                               "5f:0a:22:50:3f:8e:c5:2a",
+                               "5f:0a:22:50:3a:8e:c5:2a",
+                               "5f:0a:22:50:3b:8e:c5:2a"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("clouddb3b00.be.weather.com",
+                               "5f:0a:22:50:3f:da:ca:62",
+                               "5f:0a:22:50:3a:da:ca:62",
+                               "5f:0a:22:50:3b:da:ca:62"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("repdb1b00.be.weather.com",
+                               "5f:0a:22:50:1f:6f:3a:d3",
+                               "5f:0a:22:50:1a:6f:3a:d3",
+                               "5f:0a:22:50:1b:6f:3a:d3"))
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              ("repdb2b00.be.weather.com",
+                               "5f:0a:22:50:2f:f3:8a:00",
+                               "5f:0a:22:50:2a:f3:8a:00",
+                               "5f:0a:22:50:2b:f3:8a:00"))
+        self.connection.commit()
 
     def hostdefs_as_dict(self, hostdef_list) :
         """renders a list of hostdefs as a dictionary, keyed to the FQDN"""
@@ -80,7 +161,7 @@ class SanData(object) :
             fabric = fabricdata[switchwwn]
         else :
             return None, None
-        ahost = get_host(FQDN)
+        ahost = self.get_host(FQDN)
         if ahost.wwnn == '' :
             return None, None
         if fabric == 'a' :
@@ -91,22 +172,23 @@ class SanData(object) :
             return None, None
 
     def validate_FQDN(self, FQDN) :
-        """This needs to be externalized to a configfile, and removed for other
-           peoples use
+        """This needs to be externalized to a configfile, and removed for
+           other peoples use
         """
         domain = re.search('\.(atl|be|fe|twc|dmz)\.weather\.com$', 
                            FQDN, re.IGNORECASE)
         if domain == None :
             return False
-        node = get_node_from_FQDN(FQDN)
+        node = self.get_node_from_FQDN(FQDN)
         if node == None :
             return False
         return True
 
     def get_id_from_wwn(self, wwn) :
-        """Take a wwn, and split out the unique id from it.  The unique ID will not
-        have colons in it when done"""
-        wwn2 = remove_colons(wwn)
+        """Take a wwn, and split out the unique id from it.  The unique ID
+           will not have colons in it when done
+        """
+        wwn2 = self.remove_colons(wwn)
         return wwn2[1:7]
 
     def ensure_unique(self, random_id) :
@@ -114,29 +196,31 @@ class SanData(object) :
         of a collision are pretty small, but it exists"""
         idlist = []
         for h in hostdata.keys() :
-            idlist.append(get_id_from_wwn(hostdata[h][0]))
+            idlist.append(self.get_id_from_wwn(hostdata[h][0]))
         if random_id in idlist :
             return False
         return True
 
     def gen_random_id(self, with_colons=True) :
         """Generate a random 6 digit hex id. Also runs ensure_unique on it to
-        validate its unique"""
+           validate its unique
+        """
         for i in range(3) :
             # try three times to make a random int.  If it fails after that
             # there are bigger problems
             x = random.randint(0,16777215)
             y = "%x" % x
-            if ensure_unique(y) :
+            if self.ensure_unique(y) :
                 if with_colons :
-                    return add_colons(y)
+                    return self.add_colons(y)
                 return y
         logging.critical("death! 3 random numbers collided with existing numbers")
         sys.exit(-1)
 
     def add_colons(self, charstring, addchar=':') :
         """add colons to a string such that 00112233 becomes 00:11:22:33.
-        Useful to transform World Wide Names back and forth"""
+           Useful to transform World Wide Names back and forth
+        """
         chararray = list(charstring)
         length = len(chararray)
         if length % 2 == 0 :
@@ -147,8 +231,9 @@ class SanData(object) :
         return ''.join(chararray)
 
     def remove_colons(self, charstring, removechar=':') :
-        """remove colons from a string. useful to transform World wide names back
-        and forth."""
+        """remove colons from a string. useful to transform World wide names
+           back and forth.
+        """
         return charstring.replace(removechar, '')
 
     def get_node_from_FQDN(self, FQDN) :
@@ -186,14 +271,15 @@ class SanData(object) :
                 continue
             if len(words) == 4 :
                 FQDN = words[0]
-                wwnn = add_colons(remove_colons(words[1]))
-                wwpna = add_colons(remove_colons(words[2]))
-                wwpnb = add_colons(remove_colons(words[3]))
+                wwnn = self.add_colons(self.remove_colons(words[1]))
+                wwpna = self.add_colons(self.remove_colons(words[2]))
+                wwpnb = self.add_colons(self.remove_colons(words[3]))
                 hostdata[FQDN] = (wwnn, wwpna, wwpnb)
 
     def get_host_data(self) :
         """sees if the sqllite file exists, and is openable. if not, creates
-        an empty one with the right tables."""
+           an empty one with the right tables.
+        """
         # TODO:   %%%
         global SQLDB_FILE
 
@@ -231,15 +317,15 @@ class SanData(object) :
             # already exists.
             ahost = hostdef(FQDN, *hostdata[FQDN])
             return (False, ahost)
-        node = get_node_from_FQDN(FQDN)
+        node = self.get_node_from_FQDN(FQDN)
         if node == None :
             logging.critical('Cannot determine node from name %s. Exiting.' % FQDN)
             ahost = hostdef('', '', '', '')
             return (False, ahost)
-        unique_id = gen_random_id()
-        wwnn, wwpn_a, wwpn_b = create_wwns(node, unique_id)
+        unique_id = self.gen_random_id()
+        wwnn, wwpn_a, wwpn_b = self.create_wwns(node, unique_id)
         ahost = hostdef(FQDN, wwnn, wwpn_a, wwpn_b)
-        save_new_hostinfo(ahost)
+        self.save_new_hostinfo(ahost)
         return (True, ahost)
 
 #    def initialize() :

@@ -3,6 +3,7 @@
 import sys
 
 import wwn_factory
+import fqdn_validator
 
 CREATE = False
 
@@ -30,7 +31,7 @@ def check_arguments() :
         USAGE()
         sys.exit()
     FQDN = sys.argv[1]
-    if wwn_factory.validate_FQDN(FQDN) :
+    if fqdn_validator.validate_FQDN(FQDN) :
         return FQDN
     else :
         print """invalid FQDN! 
