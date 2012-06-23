@@ -16,19 +16,19 @@ def slash() :
 def listall() :
     global options
     logging.info('welcome')
-    hosts = wwn_factory.get_all_hosts()
+    hosts = SanData.get_all_hosts()
     return bottle.template('make_table', rows=hosts)
 
 @bottle.get('/list/:FQDN')
 def list_FQDN(FQDN) :
-    host = wwn_factory.get_host(FQDN)
+    host = SanData.get_host(FQDN)
     if host.FQDN == '' :
         return "<p> host %s not found." % FQDN
     return bottle.template('make_table', rows=[host])
 
 @bottle.get('/json/:FQDN')
 def json_FQDN(FQDN) :
-    host = wwn_factory.get_host(FQDN)
+    host = SanData.get_host(FQDN)
     if host.FQDN == '' :
         return "host %s not found." % FQDN
     result = {}
@@ -42,7 +42,7 @@ def json_FQDN(FQDN) :
 @bottle.get('/create/:FQDN')
 def create_FQDN(FQDN) :
     if fqdn_validator.validate_FQDN(FQDN) :
-        success, host = wwn_factory.create(FQDN)
+        success, host = SanData.create(FQDN)
         if success :
             return bottle.template('make_table', rows=[host])
         else :
@@ -66,7 +66,8 @@ def mistake404(code):
 if __name__ == '__main__' :
     logging.basicConfig(level=logging.DEBUG)
     logging.info('starting for jason')
-    wwn_factory.initialize()
+    #wwn_factory.initialize()
+    SanData = wwn_factory.SanData()
     # TODO: disable for production:
     bottle.debug(True)
     bottle.run(host='127.0.0.1', port=8080)

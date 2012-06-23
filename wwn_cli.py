@@ -6,6 +6,7 @@ import wwn_factory
 import fqdn_validator
 
 CREATE = False
+DESTROY = False
 
 def USAGE() :
     print "%s -h            Print this help messages" % sys.argv[0]
@@ -15,6 +16,7 @@ def USAGE() :
 def check_arguments() :
     """Check the command line arguments"""
     global CREATE
+    global DESTROY
     if len(sys.argv) == 1 :
         USAGE()
         sys.exit()
@@ -25,6 +27,9 @@ def check_arguments() :
         return 'ALL'
     if sys.argv[1] in ('CREATE', 'create', 'Create') :
         CREATE = True
+        del sys.argv[1]
+    if sys.argv[1] in ('DESTROY', 'destroy', 'Destroy') :
+        DESTROY = True
         del sys.argv[1]
     if len(sys.argv) != 2 :
         print 'bad argument count'
@@ -50,17 +55,28 @@ fabric-B wwpn %s""" % ahost
 
 if __name__ == '__main__' :
     FQDN = check_arguments()
-    wwn_factory.initialize()
+    #wwn_factory.initialize()
+    SanData = wwn_factory.SanData()
     if FQDN == 'ALL' :
-        hosts = wwn_factory.get_all_hosts()
+        hosts = SanData.get_all_hosts()
         for host in hosts :
             printer(host)
     elif CREATE :
-        success, host = wwn_factory.create(FQDN)
+        success, host = SanData.create(FQDN)
         if success :
             print 'successfully created wwn set for %s' % host.FQDN
         else :
             print 'host %s already exists!' % host.FQDN
         printer(host)
+    elif DESTROY :
+        success = SanData.delete(FQDN)
+        if success :
+            print "successfully deleted host %s" % FQDN
+        else :
+            print "host %s does not exist" % FQDN
     else :
-        printer(wwn_factory.get_host(FQDN))
+        ahost = SanData.get_host(FQDN)
+        if ahost.FQDN == '' :
+            print "host %s does not exist" % FQDN
+        else :
+            printer(ahost)

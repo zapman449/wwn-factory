@@ -4,10 +4,7 @@
 
 import collections
 import logging
-import os
-import os.path
 import random
-import re
 import sqlite3
 import sys
 
@@ -15,7 +12,7 @@ hostdef = collections.namedtuple('hostdef', 'FQDN wwnn wwpn_a wwpn_b')
 
 hostdata = {}
 # central DB to hold host -> (wwnn, wwpn-a, wwpn-b) data.
-fabricdata = {}
+#fabricdata = {}
 
 SQLDB_FILE = 'san.db'
 HOST_DEF_FILE = 'host_data'
@@ -33,8 +30,8 @@ class SanData(object) :
         self.connection = None
         self.cursor = None
         self.init_db()
-        self.get_host_data()
-        self.read_fabrics()
+        #self.get_host_data()
+        #self.read_fabrics()
 
     def init_db(self) :
         try :
@@ -52,13 +49,11 @@ class SanData(object) :
 
     def make_tables(self) :
         """makes blank tables"""
+        print 'create DbVersion'
         self.cursor.execute("CREATE TABLE DbVersion(Version INT)")
         self.cursor.execute("INSERT INTO DbVersion(Version) VALUES (1);")
-        self.cursor.execute("CREATE TABLE Fabrics(SwitchWWN CHAR(23), Description CHAR(25), Fabric CHAR(1))")
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:04:46:c5", "verizon-fabric-a", 'a') )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:04:4f:28", "verizon-fabric-a", 'a') )
+        print 'create Fabrics'
+        self.cursor.execute("CREATE TABLE Fabrics(SwitchWWN CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, Description CHAR(25), Fabric CHAR(1))")
         self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
                       ("10:00:00:05:1e:04:46:c5", "verizon-fabric-a", "a") )
         self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
@@ -84,7 +79,8 @@ class SanData(object) :
         self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
                       ("10:00:00:05:33:ca:6a:0b", "tc3-broadcast-a", "a") )
         #####
-        self.cursor.execute("CREATE TABLE HostInfo(FQDN CHAR(100), WWNN CHAR(23), WWPNA CHAR(23), WWPNB CHAR(23))")
+        print 'create HostInfo'
+        self.cursor.execute("CREATE TABLE HostInfo(FQDN CHAR(100) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWNN CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWPNA CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWPNB CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK)")
         self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
                               ("prtsys01.atl.weather.com", 
                                "5f:0a:22:50:0f:21:db:b4",
@@ -137,52 +133,46 @@ class SanData(object) :
                                "5f:0a:22:50:2b:f3:8a:00"))
         self.connection.commit()
 
-    def hostdefs_as_dict(self, hostdef_list) :
-        """renders a list of hostdefs as a dictionary, keyed to the FQDN"""
-        result = {}
-        for ahost in hostdef_list :
-            result[ahost.FQDN] = {}
-            result[ahost.FQDN]['wwnn'] = ahost.wwnn
-            result[ahost.FQDN]['wwpn_a'] = ahost.wwpn_a
-            result[ahost.FQDN]['wwpn_b'] = ahost.wwpn_b
-        return result
+#    def hostdefs_as_dict(self, hostdef_list) :
+#        # can be deprecated???
+#        """renders a list of hostdefs as a dictionary, keyed to the FQDN"""
+#        result = {}
+#        for ahost in hostdef_list :
+#            result[ahost.FQDN] = {}
+#            result[ahost.FQDN]['wwnn'] = ahost.wwnn
+#            result[ahost.FQDN]['wwpn_a'] = ahost.wwpn_a
+#            result[ahost.FQDN]['wwpn_b'] = ahost.wwpn_b
+#        return result
 
-    def read_fabrics(self) :
-        """Read the FABRIC_DEF_FILE into a data structure"""
-        fabfile = open(FABRIC_DEF_FILE, 'r')
-        for line in fabfile :
-            if line.startswith('#') :
-                continue
-            switchwwn, desc, node, fabric, ident = line.split()
-            fabricdata[switchwwn] = fabric
+#    def read_fabrics(self) :
+#        """Read the FABRIC_DEF_FILE into a data structure"""
+#        fabfile = open(FABRIC_DEF_FILE, 'r')
+#        for line in fabfile :
+#            if line.startswith('#') :
+#                continue
+#            switchwwn, desc, node, fabric, ident = line.split()
+#            fabricdata[switchwwn] = fabric
 
     def get_wwns_from_fabric(self, switchwwn, FQDN) :
-        if switchwwn in fabricdata :
-            fabric = fabricdata[switchwwn]
-        else :
+        self.cursor.execute('SELECT Fabric FROM Fabrics WhERE SwitchWWN=:wwn',
+                                {":wwn": switchwwn} )
+        row = self.cursor.fetchone()
+        if row == None :
+            logging.error("SwitchWWN %s not found in DB.  New switch?" % switchwwn)
             return None, None
+        else :
+            fabric = row[0]
         ahost = self.get_host(FQDN)
         if ahost.wwnn == '' :
+            logging.error("FQDN %s not found in DB." % FQDN)
             return None, None
         if fabric == 'a' :
             return ahost.wwpn_a, ahost.wwnn
         elif fabric == 'b' :
             return ahost.wwpn_b, ahost.wwnn
         else :
+            logging.error("Really should not happen (in get_wwns_from_fabric)")
             return None, None
-
-    def validate_FQDN(self, FQDN) :
-        """This needs to be externalized to a configfile, and removed for
-           other peoples use
-        """
-        domain = re.search('\.(atl|be|fe|twc|dmz)\.weather\.com$', 
-                           FQDN, re.IGNORECASE)
-        if domain == None :
-            return False
-        node = self.get_node_from_FQDN(FQDN)
-        if node == None :
-            return False
-        return True
 
     def get_id_from_wwn(self, wwn) :
         """Take a wwn, and split out the unique id from it.  The unique ID
@@ -192,11 +182,10 @@ class SanData(object) :
         return wwn2[1:7]
 
     def ensure_unique(self, random_id) :
-        """Take a random_ID and ensure that it is unique in our system.  The odds
-        of a collision are pretty small, but it exists"""
-        idlist = []
-        for h in hostdata.keys() :
-            idlist.append(self.get_id_from_wwn(hostdata[h][0]))
+        """Take a random_ID and ensure that it is unique in our system.  The 
+           odds of a collision are pretty small, but it exists"""
+        self.cursor.execute('select WWNN from HostInfo')
+        idlist = map(self.get_id_from_wwn(self.cursor.fetchall()))
         if random_id in idlist :
             return False
         return True
@@ -236,59 +225,39 @@ class SanData(object) :
         """
         return charstring.replace(removechar, '')
 
-    def get_node_from_FQDN(self, FQDN) :
-        """Take a given FQDN, and determine which node it lives in"""
-        if FQDN.startswith('pr') or FQDN.startswith('dv') or \
-                FQDN.startswith('qa') or FQDN.startswith('de') :
-            if FQDN[2] == 't' :
-                return '0'
-            if FQDN[2] == 'e' :
-                return '2'
-            if FQDN[2] == 'c' :
-                return '1'
-            return None
-        re0 = re.search('0[bx][0-9][0-9]', FQDN)
-        re1 = re.search('1[bx][0-9][0-9]', FQDN)
-        re2 = re.search('2[bx][0-9][0-9]', FQDN)
-        re3 = re.search('3[bx][0-9][0-9]', FQDN)
-        if re0 :
-            return '0'
-        if re1 :
-            return '1'
-        if re2 :
-            return '2'
-        if re3 :
-            return '3'
-        return None
+#    def get_host_data_orig(self) :
+#        """reads the node_data file and fills the hostdata dictionary"""
+#        db = open(HOST_DEF_FILE, 'r')
+#        for line in db :
+#            uline = line.strip()
+#            words = uline.split()
+#            if line.startswith('#') :
+#                continue
+#            if len(words) == 4 :
+#                FQDN = words[0]
+#                wwnn = self.add_colons(self.remove_colons(words[1]))
+#                wwpna = self.add_colons(self.remove_colons(words[2]))
+#                wwpnb = self.add_colons(self.remove_colons(words[3]))
+#                hostdata[FQDN] = (wwnn, wwpna, wwpnb)
 
-    def get_host_data_orig(self) :
-        """reads the node_data file and fills the hostdata dictionary"""
-        db = open(HOST_DEF_FILE, 'r')
-        for line in db :
-            uline = line.strip()
-            words = uline.split()
-            if line.startswith('#') :
-                continue
-            if len(words) == 4 :
-                FQDN = words[0]
-                wwnn = self.add_colons(self.remove_colons(words[1]))
-                wwpna = self.add_colons(self.remove_colons(words[2]))
-                wwpnb = self.add_colons(self.remove_colons(words[3]))
-                hostdata[FQDN] = (wwnn, wwpna, wwpnb)
-
-    def get_host_data(self) :
-        """sees if the sqllite file exists, and is openable. if not, creates
-           an empty one with the right tables.
-        """
-        # TODO:   %%%
-        global SQLDB_FILE
+#    def get_host_data(self) :
+         # suplanted by __init__ and make_tables
+#        """sees if the sqllite file exists, and is openable. if not, creates
+#           an empty one with the right tables.
+#        """
+#        #global SQLDB_FILE
+#        self.cursor.execute(
 
     def save_new_hostinfo(self, ahost) :
         """Write out the new wwn data to the state file"""
-        db = open(HOST_DEF_FILE, 'a')
-        line = "	".join([ahost.FQDN, ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b])
-        db.write(line + '\n')
-        hostdata[ahost.FQDN] = (ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b)
+        #db = open(HOST_DEF_FILE, 'a')
+        #line = "	".join([ahost.FQDN, ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b])
+        #db.write(line + '\n')
+        #hostdata[ahost.FQDN] = (ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b)
+        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
+                              (ahost.FQDN, ahost.wwnn, 
+                               ahost.wwpn_a, ahost.wwpn_b) )
+        self.connection.commit()
 
     def create_wwns(self, node, unique_id) :
         """Generate the three wwns from FIRSTOCTETS, node, and unique_id"""
@@ -298,28 +267,45 @@ class SanData(object) :
         return (wwnn, wwpna, wwpnb)
 
     def get_host(self, FQDN) :
-        if FQDN in hostdata :
-            return hostdef(FQDN, *hostdata[FQDN])
-        else :
+        self.cursor.execute("SELECT wwnn, wwpna, wwpnb FROM HostInfo where FQDN = ?", (FQDN,))
+        row = self.cursor.fetchone()
+        if row == None :
             return hostdef('', '', '', '')
+        else :
+            return hostdef(FQDN, row[0], row[1], row[2])
+        #if FQDN in hostdata :
+        #    return hostdef(FQDN, *hostdata[FQDN])
+        #else :
+        #    return hostdef('', '', '', '')
+
+##### %%% #####
+# Done to this point
 
     def get_all_hosts(self) :
         """returns all hosts"""
+        self.cursor.execute('select * from HostInfo ORDER BY FQDN')
+        #return map(hostdef, self.cursor.fetchall())
         results = []
-        for FQDN in sorted(hostdata) :
-            results.append(hostdef(FQDN, *hostdata[FQDN]))
+        for row in self.cursor.fetchall() :
+            results.append(hostdef(*row))
         return results
+        #results = []
+        #for row in self.cursor.fetchall() :
+        #    results.append(hostdef(row))
+        #return results
 
     def create(self, FQDN) :
         """if FQDN does not exist, make one.  Returns a tuple of True/False (for
         if it was created or if it already existed) and a hostdef"""
-        if FQDN in hostdata.keys() :
-            # already exists.
-            ahost = hostdef(FQDN, *hostdata[FQDN])
+        self.cursor.execute('select * from HostInfo where FQDN = ?', (FQDN,))
+        row = self.cursor.fetchone()
+        if FQDN == row[0] :
+            # already exists
+            ahost = hostdef(*row)
             return (False, ahost)
         node = self.get_node_from_FQDN(FQDN)
         if node == None :
-            logging.critical('Cannot determine node from name %s. Exiting.' % FQDN)
+            logging.warning('Cannot determine node from name %s. Exiting.' % FQDN)
             ahost = hostdef('', '', '', '')
             return (False, ahost)
         unique_id = self.gen_random_id()
@@ -327,6 +313,17 @@ class SanData(object) :
         ahost = hostdef(FQDN, wwnn, wwpn_a, wwpn_b)
         self.save_new_hostinfo(ahost)
         return (True, ahost)
+
+    def delete(self, FQDN) :
+        """If FQDN exists, delete it."""
+        self.cursor.execute('select * from HostInfo where FQDN = ?', (FQDN,))
+        row = self.cursor.fetchone()
+        if FQDN == row[0] :
+            # already exists
+            self.cursor.execute('delete from HostInfo where FQDN = ?', (FQDN,))
+            self.connection.commit()
+            return True
+        return False
 
 #    def initialize() :
 #        get_host_data()
