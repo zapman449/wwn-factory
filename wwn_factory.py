@@ -125,15 +125,25 @@ class SanData(object) :
                                "5f:0a:22:50:2b:f3:8a:00"))
         self.connection.commit()
 
-    def get_wwns_from_fabric(self, switchwwn, FQDN) :
-        self.cursor.execute('SELECT Fabric FROM Fabrics WhERE SwitchWWN=:wwn',
-                                {":wwn": switchwwn} )
+    def get_fabric_from_switchwwn(self, switchwwn) :
+        logging.info(repr(switchwwn))
+        if switchwwn.startswith('0x') :
+            switchwwn = switchwwn[2:]
+        if not self.has_colons(switchwwn) :
+            switchwwn = self.add_colons(switchwwn)
+        self.cursor.execute('SELECT Fabric FROM Fabrics WHERE SwitchWWN = ?',
+                                (switchwwn,) )
         row = self.cursor.fetchone()
         if row == None :
             logging.error("SwitchWWN %s not found in DB.  New switch?" % switchwwn)
-            return None, None
+            return None
         else :
-            fabric = row[0]
+            return row[0]
+
+    def get_wwns_from_fabric(self, switchwwn, FQDN) :
+        fabric = self.get_fabric_from_switchwwn(switchwwn)
+        if fabric == None :
+            return None, None
         ahost = self.get_host(FQDN)
         if ahost.wwnn == '' :
             logging.error("FQDN %s not found in DB." % FQDN)
@@ -196,6 +206,13 @@ class SanData(object) :
            back and forth.
         """
         return charstring.replace(removechar, '')
+
+    def has_colons(self, charstring, checkchar=':') :
+        """Sees if there are colons in the right spots"""
+        for i in range(2,23,3) :
+            if charstring[i] != checkchar :
+                return False
+        return True
 
     def save_new_hostinfo(self, ahost) :
         """Write out the new wwn data to the state file"""

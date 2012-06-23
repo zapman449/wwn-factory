@@ -26,6 +26,27 @@ def list_FQDN(FQDN) :
         return "<p> host %s not found." % FQDN
     return bottle.template('make_table', rows=[host])
 
+@bottle.route('/wwn_fabric/<FQDN>/<switchwwn>')
+def wwn_fabric(FQDN, switchwwn) :
+    logging.info(repr(FQDN))
+    logging.info(repr(switchwwn))
+    host = SanData.get_host(FQDN)
+    fabric = SanData.get_fabric_from_switchwwn(switchwwn)
+    if fabric == None :
+        return "fabric not found"
+    if host.FQDN == '' :
+        return "host not found"
+    if fabric in ('a', 'b') :
+        short_node = SanData.remove_colons(host.wwnn)
+        if fabric == 'a' :
+            short_port = SanData.remove_colons(host.wwpn_a)
+        elif fabric == 'b' :
+            short_port = SanData.remove_colons(host.wwpn_b)
+        cmd = ':'.join((short_port, short_node))
+        return cmd
+    logging.info("-- %s -- %s --" % (host.FQDN, fabric))
+    return 'fabric out of bounds'
+
 @bottle.get('/json/:FQDN')
 def json_FQDN(FQDN) :
     host = SanData.get_host(FQDN)
