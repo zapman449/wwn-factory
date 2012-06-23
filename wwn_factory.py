@@ -8,15 +8,7 @@ import random
 import sqlite3
 import sys
 
-hostdef = collections.namedtuple('hostdef', 'FQDN wwnn wwpn_a wwpn_b')
-
-hostdata = {}
-# central DB to hold host -> (wwnn, wwpn-a, wwpn-b) data.
-#fabricdata = {}
-
 SQLDB_FILE = 'san.db'
-HOST_DEF_FILE = 'host_data'
-FABRIC_DEF_FILE = 'fabric_names'
 
 FIRSTOCTETS = "5f:0a:22:50"
 # 5 + f:0a:22:5 + 0
@@ -25,13 +17,13 @@ FIRSTOCTETS = "5f:0a:22:50"
 # http://standards.ieee.org/develop/regauth/oui/oui.txt
 # 5 indicates type 5, the trailing 0 is for padding.
 
+hostdef = collections.namedtuple('hostdef', 'FQDN wwnn wwpn_a wwpn_b')
+
 class SanData(object) :
     def __init__(self) :
         self.connection = None
         self.cursor = None
         self.init_db()
-        #self.get_host_data()
-        #self.read_fabrics()
 
     def init_db(self) :
         try :
@@ -133,26 +125,6 @@ class SanData(object) :
                                "5f:0a:22:50:2b:f3:8a:00"))
         self.connection.commit()
 
-#    def hostdefs_as_dict(self, hostdef_list) :
-#        # can be deprecated???
-#        """renders a list of hostdefs as a dictionary, keyed to the FQDN"""
-#        result = {}
-#        for ahost in hostdef_list :
-#            result[ahost.FQDN] = {}
-#            result[ahost.FQDN]['wwnn'] = ahost.wwnn
-#            result[ahost.FQDN]['wwpn_a'] = ahost.wwpn_a
-#            result[ahost.FQDN]['wwpn_b'] = ahost.wwpn_b
-#        return result
-
-#    def read_fabrics(self) :
-#        """Read the FABRIC_DEF_FILE into a data structure"""
-#        fabfile = open(FABRIC_DEF_FILE, 'r')
-#        for line in fabfile :
-#            if line.startswith('#') :
-#                continue
-#            switchwwn, desc, node, fabric, ident = line.split()
-#            fabricdata[switchwwn] = fabric
-
     def get_wwns_from_fabric(self, switchwwn, FQDN) :
         self.cursor.execute('SELECT Fabric FROM Fabrics WhERE SwitchWWN=:wwn',
                                 {":wwn": switchwwn} )
@@ -225,35 +197,8 @@ class SanData(object) :
         """
         return charstring.replace(removechar, '')
 
-#    def get_host_data_orig(self) :
-#        """reads the node_data file and fills the hostdata dictionary"""
-#        db = open(HOST_DEF_FILE, 'r')
-#        for line in db :
-#            uline = line.strip()
-#            words = uline.split()
-#            if line.startswith('#') :
-#                continue
-#            if len(words) == 4 :
-#                FQDN = words[0]
-#                wwnn = self.add_colons(self.remove_colons(words[1]))
-#                wwpna = self.add_colons(self.remove_colons(words[2]))
-#                wwpnb = self.add_colons(self.remove_colons(words[3]))
-#                hostdata[FQDN] = (wwnn, wwpna, wwpnb)
-
-#    def get_host_data(self) :
-         # suplanted by __init__ and make_tables
-#        """sees if the sqllite file exists, and is openable. if not, creates
-#           an empty one with the right tables.
-#        """
-#        #global SQLDB_FILE
-#        self.cursor.execute(
-
     def save_new_hostinfo(self, ahost) :
         """Write out the new wwn data to the state file"""
-        #db = open(HOST_DEF_FILE, 'a')
-        #line = "	".join([ahost.FQDN, ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b])
-        #db.write(line + '\n')
-        #hostdata[ahost.FQDN] = (ahost.wwnn, ahost.wwpn_a, ahost.wwpn_b)
         self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
                               (ahost.FQDN, ahost.wwnn, 
                                ahost.wwpn_a, ahost.wwpn_b) )
@@ -273,26 +218,14 @@ class SanData(object) :
             return hostdef('', '', '', '')
         else :
             return hostdef(FQDN, row[0], row[1], row[2])
-        #if FQDN in hostdata :
-        #    return hostdef(FQDN, *hostdata[FQDN])
-        #else :
-        #    return hostdef('', '', '', '')
-
-##### %%% #####
-# Done to this point
 
     def get_all_hosts(self) :
         """returns all hosts"""
         self.cursor.execute('select * from HostInfo ORDER BY FQDN')
-        #return map(hostdef, self.cursor.fetchall())
         results = []
         for row in self.cursor.fetchall() :
             results.append(hostdef(*row))
         return results
-        #results = []
-        #for row in self.cursor.fetchall() :
-        #    results.append(hostdef(row))
-        #return results
 
     def create(self, FQDN) :
         """if FQDN does not exist, make one.  Returns a tuple of True/False (for
@@ -324,10 +257,6 @@ class SanData(object) :
             self.connection.commit()
             return True
         return False
-
-#    def initialize() :
-#        get_host_data()
-#        read_fabrics()
 
 if __name__ == '__main__' :
     pass
