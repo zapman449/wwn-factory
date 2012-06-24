@@ -1,8 +1,7 @@
 #!/bin/bash
 
 URL='http://localhost:8080/wwn_fabric'
-
-#FQDN='repdb3b00.be.weather.com'
+#URL='http://npiv.be.weather.com:8080/wwn_fabric'
 
 SYSPATH='/tmp/sys/class/fc_host/'
 #SYSPATH='/sys/class/fc_host/'
@@ -24,6 +23,9 @@ if [ -z "$1" ]; then
 else
     FQDN=$1
 fi
+
+# todo: handle 'host not in DB errors better.
+# todo: also handle host in db, but not usable for this fabric.
 
 for fchost in ${SYSPATH}/host* ; do
     if [ -f ${fchost}/${VPORT} ]; then
