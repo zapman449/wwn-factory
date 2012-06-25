@@ -24,7 +24,6 @@ else
     FQDN=$1
 fi
 
-# todo: handle 'host not in DB errors better.
 # todo: also handle host in db, but not usable for this fabric.
 
 for fchost in ${SYSPATH}/host* ; do
@@ -33,7 +32,11 @@ for fchost in ${SYSPATH}/host* ; do
         #echo "getting ${URL}/${FQDN}/${fabric}"
         result=`curl --silent ${URL}/${FQDN}/${fabric}`
         #echo " -- FQDN: $FQDN -- Fabric ${fabric} -- Result ${result} -- "
-        #echo "-- $fabric --"
+        echo $result | egrep "(not found|out of bounds)" > /dev/null 2>&1
+        if [ "$?" = "0" ] ; then
+            echo "ERROR: $result"
+            continue		# should this be 'exit'?
+        fi
         echo "echo \"$result\" > ${fchost}/${VPORT}"
     fi
 done
