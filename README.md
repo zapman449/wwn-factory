@@ -44,14 +44,19 @@ Run with 'wwn_web.py'.
 
 http://localhost:8080/
 	redirects to listall
+
 http://localhost:8080/listall
 	HTML table with all hosts and wwns listed
+
 http://localhost:8080/list/<FQDN>
 	HTML table FQDN's information listed
+
 http://localhost:8080/json/<FQDN>
 	json data for FQDN's wwns
+
 http://localhost:8080/create/<FQDN>
 	Creates and lists wwns for FQDN.
+
 http://localhost:8080/wwn_fabric/<FQDN>/<switchwwn>
 	This is different from the above.  This is used by wwn_remote.py.
 	This is based on a given host not needing to have a list of all
