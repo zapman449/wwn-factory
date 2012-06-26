@@ -28,7 +28,7 @@ internet attacks.  The concept if a 'node' is important for my environment
 but not for yours.  You could think of a 'node' as a group of fabrics, say 
 an A and B fabric for one physical location.  The easiest thing to do would be
 rename 'simple_validate' to 'falidate_FQDN' and be done with it, though 
-that test is a little... nieve.
+that test is a little... naive.
 b) You'll need to remove/modify the 'make_tables' function in wwn_factory.  
 This bootstraps the DB to have a bit of data in it, and all the right tables.
 
