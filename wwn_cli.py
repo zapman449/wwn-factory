@@ -12,6 +12,7 @@ def USAGE() :
     print "%s -h            Print this help messages" % sys.argv[0]
     print "%s FQDN          Print existing WWNN and WWPN or error out" % sys.argv[0]
     print "%s create FQDN   Print existing WWNN and WWPN, or create new and print" % sys.argv[0]
+    print "%s destroy FQDN  Destroys a host from the database" % sys.argv[0]
 
 def check_arguments() :
     """Check the command line arguments"""

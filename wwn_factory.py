@@ -8,6 +8,8 @@ import random
 import sqlite3
 import sys
 
+import fqdn_validator
+
 SQLDB_FILE = 'san.db'
 
 FIRSTOCTETS = "5f:0a:22:50"
@@ -54,82 +56,17 @@ class SanData(object) :
         print 'create Fabrics'
         self.cursor.execute("CREATE TABLE Fabrics(SwitchWWN CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, Description CHAR(25), Fabric CHAR(1))")
         self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:04:46:c5", "verizon-fabric-a", "a") )
+                      ("10:00:00:05:33:73:0f:c9", "earthstation-fabric-a", "a"))
         self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:04:4f:28", "verizon-fabric-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:73:0f:c9", "earthstation-fab-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:72:f6:1a", "earthstation-fab-b", "b") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:dd:3b:e1", "tc3-fabric-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:73:64:d1", "tc3-fabric-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:ca:6b:0f", "tc3-fabric-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:73:68:15", "tc3-fabric-b", "b") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:1e:dd:2f:5d", "tc3-fabric-b", "b") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:cf:99:6b", "tc3-fabric-b", "b") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:c8:54:29", "tc3-broadcast-a", "a") )
-        self.cursor.execute("INSERT INTO Fabrics VALUES (?, ?, ?);",
-                      ("10:00:00:05:33:ca:6a:0b", "tc3-broadcast-a", "a") )
+                      ("10:00:00:05:33:72:f6:1a", "earthstation-fabric-b", "b"))
         #####
         print 'create HostInfo'
         self.cursor.execute("CREATE TABLE HostInfo(FQDN CHAR(100) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWNN CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWPNA CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK, WWPNB CHAR(23) UNIQUE NOT NULL ON CONFLICT ROLLBACK)")
         self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("prtsys01.atl.weather.com", 
-                               "5f:0a:22:50:0f:21:db:b4",
-                               "5f:0a:22:50:0a:21:db:b4",
-                               "5f:0a:22:50:0b:21:db:b4") )
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("jtest.atl.weather.com",
-                               "5f:0a:22:50:0f:33:22:11",
-                               "5f:0a:22:50:0a:33:22:11",
-                               "5f:0a:22:50:0b:33:22:11"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("nas0b00.be.weather.com",
-                               "5f:0a:22:50:0f:dd:d3:81",
-                               "5f:0a:22:50:0a:dd:d3:81",
-                               "5f:0a:22:50:0b:dd:d3:81"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("repdb3b00.be.weather.com",
-                               "5f:0a:22:50:3f:f4:33:ab",
-                               "5f:0a:22:50:3a:f4:33:ab",
-                               "5f:0a:22:50:3b:f4:33:ab"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("zabbixdb3b00.be.weather.com",
-                               "5f:0a:22:50:3f:f0:8d:3f",
-                               "5f:0a:22:50:3a:f0:8d:3f",
-                               "5f:0a:22:50:3b:f0:8d:3f"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("prtsys02.atl.weather.com",
-                               "5f:0a:22:50:0f:dd:92:d8",
-                               "5f:0a:22:50:0a:dd:92:d8",
-                               "5f:0a:22:50:0b:dd:92:d8"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("zabbixdb3b01.be.weather.com",
-                               "5f:0a:22:50:3f:8e:c5:2a",
-                               "5f:0a:22:50:3a:8e:c5:2a",
-                               "5f:0a:22:50:3b:8e:c5:2a"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("clouddb3b00.be.weather.com",
-                               "5f:0a:22:50:3f:da:ca:62",
-                               "5f:0a:22:50:3a:da:ca:62",
-                               "5f:0a:22:50:3b:da:ca:62"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("repdb1b00.be.weather.com",
-                               "5f:0a:22:50:1f:6f:3a:d3",
-                               "5f:0a:22:50:1a:6f:3a:d3",
-                               "5f:0a:22:50:1b:6f:3a:d3"))
-        self.cursor.execute("INSERT INTO HostInfo VALUES (?, ?, ?, ?);",
-                              ("repdb2b00.be.weather.com",
-                               "5f:0a:22:50:2f:f3:8a:00",
-                               "5f:0a:22:50:2a:f3:8a:00",
-                               "5f:0a:22:50:2b:f3:8a:00"))
+                              ("jtest.atl.google.com",
+                               "5f:0a:22:50:0f:3a:2c:18",
+                               "5f:0a:22:50:0a:3a:2c:18",
+                               "5f:0a:22:50:0b:3a:2c:18"))
         self.connection.commit()
 
     def get_fabric_from_switchwwn(self, switchwwn) :
@@ -174,7 +111,13 @@ class SanData(object) :
         """Take a random_ID and ensure that it is unique in our system.  The 
            odds of a collision are pretty small, but it exists"""
         self.cursor.execute('select WWNN from HostInfo')
-        idlist = map(self.get_id_from_wwn(self.cursor.fetchall()))
+        idlist = []
+        for wwn, in self.cursor.fetchall() :
+            # the comma is important, since the rows come back as tupples of
+            # one item.
+            #print repr(wwn)
+            id = self.get_id_from_wwn(wwn)
+            idlist.append(id)
         if random_id in idlist :
             return False
         return True
@@ -256,11 +199,14 @@ class SanData(object) :
         if it was created or if it already existed) and a hostdef"""
         self.cursor.execute('select * from HostInfo where FQDN = ?', (FQDN,))
         row = self.cursor.fetchone()
-        if FQDN == row[0] :
+        if row == None :
+            # doesn't exist in the DB
+            pass
+        elif FQDN == row[0] :
             # already exists
             ahost = hostdef(*row)
             return (False, ahost)
-        node = self.get_node_from_FQDN(FQDN)
+        node = fqdn_validator.get_node_from_FQDN(FQDN)
         if node == None :
             logging.warning('Cannot determine node from name %s. Exiting.' % FQDN)
             ahost = hostdef('', '', '', '')
