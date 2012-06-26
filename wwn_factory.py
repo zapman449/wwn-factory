@@ -25,6 +25,13 @@ class SanData(object) :
         self.cursor = None
         self.init_db()
 
+    def __del__(self) :
+        if self.cursor != None :
+            self.cursor.close()
+        if self.connection != None :
+            self.connection.commit()
+            self.connection.close()
+
     def init_db(self) :
         try :
             self.connection = sqlite3.connect(SQLDB_FILE)
